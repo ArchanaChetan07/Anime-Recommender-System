@@ -1,0 +1,154 @@
+# ─────────────────────────────────────────────────────────────────
+# AniSage — Kubernetes Manifests
+# Apply with: kubectl apply -f k8s/
+# ─────────────────────────────────────────────────────────────────
+
+# ── Namespace ───────────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: anisage
+  labels:
+    app.kubernetes.io/name: anisage
+
+---
+# ── ConfigMap (non-secret env vars) ────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: anisage-config
+  namespace: anisage
+data:
+  MODEL_NAME: "llama-3.1-8b-instant"
+  LLM_TEMPERATURE: "0"
+  EMBEDDING_MODEL: "all-MiniLM-L6-v2"
+  CHROMA_PERSIST_DIR: "/app/chroma_db"
+  CHUNK_SIZE: "1000"
+  CHUNK_OVERLAP: "100"
+  RETRIEVER_K: "5"
+
+---
+# ── Deployment ──────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anisage-app
+  namespace: anisage
+  labels:
+    app.kubernetes.io/name: anisage
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: anisage
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: anisage
+        app.kubernetes.io/name: anisage
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: anisage
+          image: anisage-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+              name: http
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: anisage-config
+            - secretRef:
+                name: anisage-secrets
+
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
+
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          volumeMounts:
+            - name: chroma-storage
+              mountPath: /app/chroma_db
+
+      volumes:
+        - name: chroma-storage
+          emptyDir: {}
+
+---
+# ── Horizontal Pod Autoscaler ──────────────────────────────────
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: anisage-hpa
+  namespace: anisage
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: anisage-app
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+
+---
+# ── Service ─────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: anisage-service
+  namespace: anisage
+  labels:
+    app.kubernetes.io/name: anisage
+spec:
+  type: LoadBalancer
+  selector:
+    app: anisage
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8501
+      name: http
