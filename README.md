@@ -177,8 +177,4 @@ make format      # Ruff format
 make clean       # Remove caches
 ```
 
----
 
-## 📜 License
-
-MIT © Sudhanshu
