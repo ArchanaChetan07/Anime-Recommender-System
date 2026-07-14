@@ -1,100 +1,156 @@
-# Anime-Recommender-System
+# AniSage — RAG Anime Recommender
 
-Python · machine-learning · scikit-learn · pandas · Jupyter · CI/CD · model-evaluation · API · cloud. hybrid CF; Docker/Helm/K8s HPA; 27 files; CI+tests. End-to-end ML: data prep, training, evaluation, and deployment-ready packaging.
+### Streamlit RAG recommender: Chroma + Hugging Face embeddings + Groq LLaMA RetrievalQA over anime synopsis data, with Docker/K8s.
 
-## Results (numbers)
+[![GitHub](https://img.shields.io/badge/repo-Anime-Recommender-System-181717?logo=github)](https://github.com/ArchanaChetan07/Anime-Recommender-System)
+[![Language](https://img.shields.io/badge/language-Python-3572A5)](https://github.com/ArchanaChetan07/Anime-Recommender-System)
+[![License](https://img.shields.io/badge/license-See%20repository-yellow)](https://github.com/ArchanaChetan07/Anime-Recommender-System)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/ArchanaChetan07/Anime-Recommender-System/actions)
 
-| Metric | Value |
-|---|---|
-| Tracked repository files | **27** |
-| Python modules | **17** |
-| Notebooks | **0** |
-| Markdown docs | **1** |
-| CI workflows present | **Yes** |
-| Automated tests present | **Yes** |
-| Project highlights | **hybrid CF; Docker/Helm/K8s HPA; 27 files; CI+tests** |
+---
+
+## Overview
+
+Preference-based anime discovery needs natural-language queries grounded in a curated catalog rather than opaque collaborative-filtering scores alone.
+
+Build vector store from anime_with_synopsis.csv, retrieve with LangChain, generate with ChatGroq RetrievalQA; Streamlit front end; pipeline builders; Makefile/Docker/K8s manifests and pytest.
+
+Deployable RAG app returning answers plus source titles from retrieved chunks; CI-present packaging.
+
+This repository is maintained as **production-minded portfolio work**: clear architecture, automated checks where present, and metrics that are **traceable to committed artifacts** (never invented).
+
+---
+
+## Architecture
+
+CSV ingest → embeddings → Chroma retriever → Groq RetrievalQA → Streamlit response with sources
+
+```mermaid
+flowchart LR
+  CSV[anime_with_synopsis.csv] --> VS[vector_store]
+  VS --> R[Retriever]
+  Q[User query] --> REC[AnimeRecommender]
+  R --> REC
+  REC --> LLM[ChatGroq RetrievalQA]
+  LLM --> UI[Streamlit]
+```
+
+```mermaid
+sequenceDiagram
+  participant U as User/Client
+  participant S as Service/Pipeline
+  participant E as Eval/Tools
+  U->>S: request / job
+  S->>E: execute
+  E-->>S: results
+  S-->>U: report / response
+```
+
+---
+
+## Results & repository facts
+
+> Only values found in code, configs, tests, or generated reports are listed. Absence of a clinical/ML accuracy number means it was **not** published in-repo.
+
+| Metric | Value | Source |
+|---|---|---|
+| Tracked blobs on main | **27** | `git tree main` |
+| Tracked files | **27** | `git tree` |
+| Python modules | **17** | `git tree` |
+| Test-related paths | **1** | `git tree` |
+| CI workflows | **Yes** | `.github/workflows` |
+| Docker present | **Yes** | `repo root` |
+
+```mermaid
+%%{init: {'theme':'base'}}%%
+pie showData title Language composition (bytes)
+    "Python" : 92
+    "Dockerfile" : 5
+    "Makefile" : 3
+```
+
+---
+
+## Key features
+
+- Synopsis CSV → embedding vector store pipeline
+- Typed RecommendationResult with source titles
+- Streamlit UI (app/app.py)
+- Dockerfile + k8s/anisage-k8s.yaml
+- pytest + GitHub Actions
+
+---
 
 ## Tech stack
 
-- **Primary language:** Python
-- **Languages (GitHub):** Python (38297 bytes), Dockerfile (2048 bytes), Makefile (1355 bytes)
-- **Focus area:** ml
-- **Tooling keywords:** Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM
+| Layer | Technology |
+|---|---|
+| language | Python |
+| rag | LangChain RetrievalQA |
+| vectorstore | ChromaDB |
+| embeddings | sentence-transformers |
+| llm | langchain-groq |
+| ui | Streamlit |
+| deploy | Docker / Helm-style k8s YAML |
 
-## Architecture (logical)
+---
 
-\\	ext
-Inputs → Processing / models / agents → Evaluation & metrics → CI checks → Artifacts
-\
-## Engineering practices
-
-1. Reproducible layout with clear module boundaries  
-2. Automated validation via CI and/or tests when present  
-3. Documentation that states measurable outcomes, not slogans  
-4. Skill surface aligned to common JD keywords: Python, machine learning, NLP/LLM, Kubernetes, Docker, observability, data pipelines  
-
-## Quick start
-
-\\ash
-git clone https://github.com/ArchanaChetan07/Anime-Recommender-System.git
-cd Anime-Recommender-System
-# Install project requirements (see requirements.txt / pyproject.toml / environment files if present)
-# Run tests or main entrypoints documented in this repo
-\
 ## Skills demonstrated
 
-Python · machine-learning · CI/CD · API design · testing · automation · Docker · Kubernetes · FastAPI · Prometheus · data-science · LLM · MLOps · software-engineering · benchmarking · observability
+Python · LangChain · ChromaDB · sentence-transformers · Groq · Streamlit · Docker · CI/CD · testing · automation
 
-## License / notice
+Keyword surface: **Python · Python · machine-learning · CI/CD · testing · API · Docker · automation · data-science · software-engineering · system-design · observability · LLM · cloud**
 
-See repository license file if present. Metrics above are derived from repository structure and previously published validation notes where available.
+---
 
+## Project structure
 
-### Extended notes
+```text
+Anime-Recommender-System/
+├── app/app.py
+├── src/{data_loader,vector_store,recommender,prompt_template}.py
+├── pipeline/
+├── data/anime_with_synopsis.csv
+├── k8s/anisage-k8s.yaml
+├── Dockerfile
+└── tests/
+```
 
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+---
 
+## Installation & usage
 
-### Extended notes
+```bash
+git clone https://github.com/ArchanaChetan07/Anime-Recommender-System.git
+cd Anime-Recommender-System
+pip install -r requirements.txt
+cp .env.example .env  # set GROQ_API_KEY
+streamlit run app/app.py
+```
 
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+---
 
+## How it works
 
-### Extended notes
+Pipeline embeds anime synopsis documents into Chroma; at query time AnimeRecommender builds a Groq-backed RetrievalQA chain, returns the LLM answer and source documents, and the UI surfaces titles parsed from chunk metadata.
 
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+---
 
+## Future improvements
 
-### Extended notes
+- Offline demo mode without Groq
+- Hybrid CF + content re-ranker if CF is desired
+- Rewrite README to match RAG implementation (not 'hybrid CF')
 
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+---
 
+## License
 
-### Extended notes
+See repository.
 
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+---
 
-
-### Extended notes
-
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
-
-
-### Extended notes
-
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
-
-
-### Extended notes
-
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
-
-
-### Extended notes
-
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
-
-
-### Extended notes
-
-This section expands documentation for completeness: reproducibility, keyword coverage for Python, machine-learning, CI/CD, API, Docker, Kubernetes, FastAPI, Prometheus, testing, automation, MLOps, LLM, data-science, software-engineering, benchmarking, and observability practices used across the portfolio.
+<p align="center">
+  <b>AniSage — RAG Anime Recommender</b><br/>
+  <a href="https://github.com/ArchanaChetan07/Anime-Recommender-System">github.com/ArchanaChetan07/Anime-Recommender-System</a>
+</p>
